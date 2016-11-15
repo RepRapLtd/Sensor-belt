@@ -7,3 +7,6 @@ WIP...
 See here for initial details:
   
   https://reprapltd.com/2016/11/15/extra-senses/
+
+Licence: GPL.
+
