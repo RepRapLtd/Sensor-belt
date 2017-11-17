@@ -15,6 +15,27 @@
   Open the serial monitor at 9600 baud
 */
 
+/*
+ * Modified to display a scrolling graph of distances in the Arduino Serial Monitor.
+ * 
+ * Adrian Bowyer
+ * RepRap Ltd
+ * https://reprapltd.com
+ * 
+ * 17/11/2017
+ * 
+ * CAUTION!!! Only use a 3V3 Arduino like the Due or the Wemos D1 (which is not an actual Arduino, but you know what I mean).
+ * A 5V Arduino will damage the RFD77402.
+ * 
+ * Connect four wires: 
+ * 
+ * Arduino pin D14/SDA to RFD77402 SDA
+ * Arduino pin D15/SCL to RFD77402 SCL
+ *         Arduino GND to RFD77402 GND
+ *         Arduino 3V3 to RFD77402 3V3
+ * 
+ */
+
 #include <SparkFun_RFD77402_Arduino_Library.h> //Use Library Manager or download here: https://github.com/sparkfun/SparkFun_RFD77402_Arduino_Library
 RFD77402 myDistance; //Hook object to the library
 
