@@ -10,93 +10,73 @@
  * 
  */
 
-const int vibrator = 3;
-const float dmax = 4000.0;
-const float maxSpace = 1000.0;
-const int threshold = 50;
-const float maxVibrate = 255.0 - (float)threshold;
+#include <Wire.h>
+#include <VL53L1X.h>
+#include "Vibrator.h"
 
-int mark = 50;
-int space = 1000;
-long nextChange;
-int vibrateValue = 0;
-int d;
-bool on;
 bool debug = true;
-
-// Set the vibration pattern
-
-void SetVibrating(int distance)
-{
-  if(debug)
-  {
-    Serial.print("Setting distance: ");
-    Serial.println(distance);
-  }
-  float frac = (float)distance/dmax;
-  if(frac > 1.0)
-    frac = 1.0;
-  space = (int)(maxSpace*frac);
-  vibrateValue = threshold + (int)(maxVibrate*(1.0 - frac));
-  nextChange = (long)millis() - 10;
-}
-
-// Execute the vibration pattern
-
-void Vibrate()
-{
-  long t = (long)millis();
-  if(nextChange - t > 0)
-    return;
-  if(on)
-  {
-    on = false;
-    analogWrite(vibrator, 0);
-    nextChange = t + space;
-  } else
-  {
-    on = true;
-    analogWrite(vibrator, vibrateValue);
-    nextChange = t + mark;    
-  }
-}
+Vibrator* vibrator;
+VL53L1X sensor;
+long nextRead;
+long readInterval = 1000;
 
 // Read the distance typed
 
-void ReadInput()
+void ReadSensor()
 {
-  if(!Serial.available())
+  long t = (long)millis();
+  if(nextRead - t > 0)
     return;
     
-  // This is a nasty way to read an integer...
+  sensor.read();
+  int d = sensor.ranging_data.range_mm;
+  if(debug)
+  {
+      Serial.print("Distance: ");
+      Serial.println(d);
+  }
   
-  char c = (char)Serial.read();
-  if(c == '\n')
-  {
-    SetVibrating(d);
-    d = 0;
-  }else
-  {
-    d = 10*d + c - '0';
-  } 
+  vibrator->SetDistance(d);
+  nextRead = t + readInterval;
 }
 
 
 void setup() 
 {
-  pinMode(vibrator, OUTPUT);
-  digitalWrite(vibrator, 0);
-
   Serial.begin(9600);
+
+  Wire.begin();
+  Wire.setClock(400000); // use 400 kHz I2C
   
   if(debug)
     Serial.println("\nVibe test.");
-    
-  SetVibrating((int)(dmax+0.5));
+
+  sensor.setTimeout(500);
+  if (!sensor.init())
+  {
+    Serial.println("Failed to detect and initialize sensor!");
+    while (1);
+  }
+
+  // Use long distance mode and allow up to 50000 us (50 ms) for a measurement.
+  // You can change these settings to adjust the performance of the sensor, but
+  // the minimum timing budget is 20 ms for short distance mode and 33 ms for
+  // medium and long distance modes. See the VL53L1X datasheet for more
+  // information on range and timing limits.
+  sensor.setDistanceMode(VL53L1X::Long);
+  sensor.setMeasurementTimingBudget(50000);
+
+  // Start continuous readings at a rate of one measurement every 50 ms (the
+  // inter-measurement period). This period should be at least as long as the
+  // timing budget.
+  sensor.startContinuous(100);
+
+  vibrator = new Vibrator(3, 50, 1000, 4000.0, 50);
+  nextRead = millis() + readInterval;
 }
 
 void loop() 
 {
-  Vibrate();
-  ReadInput();
+  vibrator->Spin();
+  ReadSensor();
 }
