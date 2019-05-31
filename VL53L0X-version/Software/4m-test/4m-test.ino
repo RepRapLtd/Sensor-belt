@@ -14,6 +14,8 @@
 #include <VL53L1X.h>
 #include "Vibrator.h"
 
+#define VPIN 6
+
 bool debug = true;
 Vibrator* vibrator;
 VL53L1X sensor;
@@ -71,7 +73,7 @@ void setup()
   // timing budget.
   sensor.startContinuous(100);
 
-  vibrator = new Vibrator(3, 50, 1000, 4000.0, 50);
+  vibrator = new Vibrator(VPIN, 50, 1000, 4000.0, 50);
   nextRead = millis() + readInterval;
 }
 
