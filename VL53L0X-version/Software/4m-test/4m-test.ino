@@ -8,6 +8,8 @@
  * 
  * Licence: GPL
  * 
+ * Compile with Arduino Leonardo
+ * 
  */
 
 #include <Wire.h>
